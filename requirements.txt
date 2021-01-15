@@ -1,1 +1,3 @@
 git+git://github.com/ch4zm/lolipy@develop#egg=golly_maps
+numpy
+scipy
