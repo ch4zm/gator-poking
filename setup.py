@@ -21,7 +21,7 @@ setup(
     packages=['gator_poking'],
     package_dir={'gator_poking': 'src'},
     package_data = {
-      'src': ['data/*.json']
+      'gator_poking': ['data/*.txt']
     },
     description='A package to simulate the splort of gator poking.',
     url='https://github.com/ch4zm/gator-poking',
