@@ -39,7 +39,7 @@ class Team(object):
     def __init__(self, teamid, city, nickname, color):
         self.id = teamid
         self.city = city
-        self.nickname = nickname
+        self.nick = nickname
         self.color = color
         self.name = city + " " + nickname
         self.roster = None
@@ -73,7 +73,7 @@ class Team(object):
         return {
             "id": self.id,
             "name": self.name,
-            "nickname": self.nickname,
+            "nickname": self.nick,
             "city": self.city,
             "color": self.color
         }
@@ -94,11 +94,22 @@ class Congregation(object):
     Define a congregation of gators.
     This is the "team" of gators that occupy a field.
     """
-    def __init__(self, name):
-        self.name = name
+    def __init__(self, gatorid, place, nickname):
+        self.id = gatorid
+        self.place = place
+        self.nick = nickname
+        self.name = place + " " + nickname
 
     def get_next_gator(self):
         return Gator()
+
+    def to_json(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "place": self.place,
+            "nickname": self.nick
+        }
 
 
 class Gator(object):

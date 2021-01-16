@@ -1,6 +1,7 @@
 from .gamesimulator import GameSimulator
 from .generators import (
     LeagueGenerator,
+    GatorLeagueGenerator
 )
 
 

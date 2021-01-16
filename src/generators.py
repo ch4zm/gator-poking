@@ -1,7 +1,7 @@
 import uuid
 import random
 import os
-from .core import Team
+from .core import Team, Congregation
 
 
 HERE = os.path.abspath(os.path.dirname(__file__))
@@ -43,31 +43,31 @@ class LeagueGenerator(object):
         return league
 
 
-### class GatorLeagueGenerator(object):
-###     """
-###     Generate a gator league (a collection of congregations in the form of a congregation id: congregation json map).
-###     """
-###     def __init__(
-###         self,
-###         gatorplaces_file = None,
-###         gatornicknames_file = None
-###     ):
-###         # Set default values for filenames
-###         if gatortypes_file is None:
-###             gatortypes_file = os.path.join(HERE, 'data', 'gatortypes.txt')
-###         if gatornicknames_file is None:
-###             gatornicknames_file = os.path.join(HERE, 'data', 'gatornicknames.txt')
-### 
-###         # The congregation generator does all the hard work
-###         self.congregation_generator = CongregationGenerator(gatorplaces_file, gatornicknames_file)
-###     
-###     def generate(self, size=2):
-###         if size%2 != 0:
-###             raise Exception(f"Error: gator leagues msut have an even number of congregations")
-###         gleague = self.congregation_generator.generate(size = size)
-###         return gleague
-### 
-### 
+class GatorLeagueGenerator(object):
+    """
+    Generate a gator league (a collection of congregations in the form of a congregation id: congregation json map).
+    """
+    def __init__(
+        self,
+        gatorplaces_file = None,
+        gatornicknames_file = None
+    ):
+        # Set default values for filenames
+        if gatorplaces_file is None:
+            gatorplaces_file = os.path.join(HERE, 'data', 'gatorplaces.txt')
+        if gatornicknames_file is None:
+            gatornicknames_file = os.path.join(HERE, 'data', 'gatornicknames.txt')
+
+        # The congregation generator does all the hard work
+        self.congregation_generator = CongregationGenerator(gatorplaces_file, gatornicknames_file)
+    
+    def generate(self, size=2):
+        if size%2 != 0:
+            raise Exception(f"Error: gator leagues must have an even number of congregations")
+        gleague = self.congregation_generator.generate(size = size)
+        return gleague
+
+
 ### class RosterGenerator(object):
 ###     """
 ###     Generate a roster (a collection of players in the form of a player id: player json map).
@@ -109,7 +109,9 @@ class BaseGenerator(object):
     def generate(self, size=1):
         if size > len(self.data):
             raise Exception(f"Error: requested size {size} was larger than size of data {len(self.data)}")
-        return random.choices(self.data, k=size)
+        data = self.data[:]
+        random.shuffle(data)
+        return data[:size]
 
 
 class TeamGenerator(object):
@@ -138,25 +140,26 @@ class TeamGenerator(object):
         return teams
 
 
-### class CongregationGenerator(object):
-###     def __init__(
-###         self,
-###         gatortypes_file,
-###         gatornicknames_file
-###     ):
-###         self.type_generator = BaseGenerator(gatortypes_file)
-###         self.nick_generator = BaseGenerator(gatornicknames_file)
-### 
-###     def generate(self, size=1):
-###         types = self.type_generator.generate(size = size)
-###         nicks = self.nick_generator.generate(size = size)
-###         congregations = []
-###         for (t, n) in zip(types, nicks):
-###             name = t + " " + n
-###             congregations.append(Congregation(name))
-###         return congregations
-### 
-### 
+class CongregationGenerator(object):
+    def __init__(
+        self,
+        gatorplaces_file,
+        gatornicknames_file
+    ):
+        self.place_generator = BaseGenerator(gatorplaces_file)
+        self.nick_generator = BaseGenerator(gatornicknames_file)
+
+    def generate(self, size=1):
+        places = self.place_generator.generate(size = size)
+        nicks = self.nick_generator.generate(size = size)
+        congregations = []
+        for (p, n) in zip(places, nicks):
+            congid = str(uuid.uuid4())
+            c = Congregation(congid, p, n)
+            congregations.append(c.to_json())
+        return congregations
+
+
 ### class PlayerGenerator(object):
 ###     """
 ###     Generate a player JSON with help from NameGenerator.
