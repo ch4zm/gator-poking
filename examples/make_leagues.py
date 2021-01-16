@@ -1,5 +1,5 @@
 import json
-from gator_poking import LeagueGenerator, GatorLeagueGenerator
+from gator_poking import LeagueGenerator
 
 
 lg = LeagueGenerator()

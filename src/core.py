@@ -1,3 +1,4 @@
+import os
 import json
 import uuid
 import random
@@ -35,18 +36,20 @@ class Team(object):
     Loads the roster to return players in order, retaining state.
     Useful for Game simulator.
     """
-    def __init__(self, city, nickname, color, roster):
+    def __init__(self, teamid, city, nickname, color):
+        self.id = teamid
+        self.city = city
+        self.nickname = nickname
+        self.color = color
         self.name = city + " " + nickname
+        self.roster = None
 
-
-
-
-
-    def __init__(self, name, size):
-        self.name = name
-        for i in range(size):
-            self.roster.append(Player())
-        self.index = 0
+    def init_roster(self, working_dir):
+        if not os.path.isdir(working_dir):
+            raise Exception(f"Error: specified working directory {working_dir} is not a directory")
+        self.working_dir = working_dir
+        # Create a new roster in the working dir
+        self.roster = None
 
     def inning_start(self):
         self.index = 0
@@ -67,6 +70,13 @@ class Team(object):
             return None
 
     def to_json(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "nickname": self.nickname,
+            "city": self.city,
+            "color": self.color
+        }
 
 
 class Player(object):
