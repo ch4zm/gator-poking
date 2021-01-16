@@ -62,8 +62,8 @@ class Game(object):
         logger.warning('=========== GAME SUMMARY ===========')
         logger.warning('====================================')
         state = self.state
-        logger.info(f"{state.team1.name:>35}: {state.state1.wickets} / {state.state1.runs} - {len(t1_r)}.{len(t1_r[-1])}")
-        logger.info(f"{state.team2.name:>35}: {state.state2.wickets} / {state.state2.runs} - {len(t2_r)}.{len(t2_r[-1])}")
+        logger.info(f"{state.team1.name:>35}: {state.state1.wickets}{'*' if state.state1.eaten else ''} / {state.state1.runs} - {len(t1_r)}.{len(t1_r[-1])}")
+        logger.info(f"{state.team2.name:>35}: {state.state2.wickets}{'*' if state.state2.eaten else ''} / {state.state2.runs} - {len(t2_r)}.{len(t2_r[-1])}")
 
 
 class GameSimulator(object):

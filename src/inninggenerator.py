@@ -68,6 +68,8 @@ class InningGenerator(object):
                 elif outcome < 0:
                     # Outcome is wickets
                     batting_state.wickets += 1
+                    if outcome <= -3:
+                        batting_state.eaten = True
                     this_over.append(0)
                     this_wickets.append(1)
                     # If we have reached maximum number of wickets, this will be None, check happens below

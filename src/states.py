@@ -24,6 +24,7 @@ class TeamState(object):
         self.runs = 0
         self.wickets = 0
         self.done = False
+        self.eaten = False
 
     def inning_start(self):
         self.team.inning_start()
