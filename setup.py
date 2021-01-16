@@ -4,8 +4,6 @@ import os
 
 with open('requirements.txt') as f:
     required = [x for x in f.read().splitlines() if not x.startswith("#") and not x.startswith("git")]
-with open('requirements-dev.txt') as f:
-    required_dev = [x for x in f.read().splitlines() if not x.startswith("#") and not x.startswith("git")]
 
 # read the contents of your README file
 from os import path
@@ -31,7 +29,6 @@ setup(
     author_email='ch4zm.of.hellmouth@gmail.com',
     license='MIT',
     install_requires=required,
-    tests_require=required_dev,
     keywords=[],
     zip_safe=False,
     long_description=long_description,
