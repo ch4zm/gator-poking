@@ -4,7 +4,7 @@ import random
 from .logsetup import *
 from .inninggenerator import InningGenerator
 from .states import GameState, TeamState
-from .core import Config, Team, Congregation
+from .core import Config, DefaultConfig, Team, Congregation
 
 
 logger = logging.getLogger('gp')
@@ -68,7 +68,7 @@ class Game(object):
 
 class GameSimulator(object):
 
-    def simulate(self):
+    def simulate(self, config = None):
 
         logger.warning("\n\n")
         logger.warning("---------------------- STARTING SIMULATOR -------------------------")
@@ -77,15 +77,9 @@ class GameSimulator(object):
         logger.debug("logger debug level: on")
         logger.warning("\n\n")
 
-        config_dict = dict(
-            PLAYERS_PER_SIDE = 11,
-            OVERS_PER_INNING = 20,
-            PLAYS_PER_OVER = 6,
-        )
-        config = Config(config_dict)
+        if config is None:
+            config = DefaultConfig()
 
-        #t1 = Team("Jacksonville Wet Bandits")
-        #t2 = Team("Palm Beach Pazookies")
         t1 = Team("St. Petersburg Paradoxes", size=config['PLAYERS_PER_SIDE'])
         t2 = Team("Tallahassee Rasslers", size=config['PLAYERS_PER_SIDE'])
         congregation = Congregation("Everglades Glories")

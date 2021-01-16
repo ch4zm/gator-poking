@@ -1,4 +1,6 @@
+import json
 from gator_poking import RosterGenerator
 
+
 rg = RosterGenerator()
-print(rg.generate())
+print(json.dumps(rg.generate(), indent=4))
