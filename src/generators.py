@@ -28,8 +28,8 @@ class LeagueGenerator(object):
             colors_file = os.path.join(HERE, 'data', 'colors.txt')
         self.team_generator = TeamGenerator(cities_file, nicknames_file, colors_file)
 
-    def generate(self, size = league_size):
-        if league_size%2 != 0:
+    def generate(self, size):
+        if size%2 != 0:
             raise Exception(f"Error: leagues must have an even number of teams")
         league = self.team_generator.generate(size = size)
         return league
@@ -141,29 +141,29 @@ class NameGenerator(object):
     """
     def __init__(
         self, 
-        firstname_data_file, 
-        lastname_data_file
+        firstnames_file, 
+        lastnames_file
     ):
         if firstnames_file is None:
             firstnames_file = os.path.join(HERE, 'data', 'firstnames.txt')
         if lastnames_file is None:
             lastnames_file = os.path.join(HERE, 'data', 'lastnames.txt')
         # verify file exists
-        for data_file in [firstname_data_file, lastname_data_file]:
+        for data_file in [firstnames_file, lastnames_file]:
             if not os.path.exists(data_file):
                 raise Exception(f"Error: Could not find data file {data_file}")
         # load first names
-        with open(firstname_data_file, 'r') as f:
-            firstname_data = f.readlines()
-        self.firstname_data = [j.strip() for j in firstname_data]
+        with open(firstnames_file, 'r') as f:
+            firstnamesdata = f.readlines()
+        self.firstnamesdata = [j.strip() for j in firstnamesdata]
         # load last names
-        with open(lastname_data_file, 'r') as f:
-            lastname_data = f.readlines()
-        self.lastname_data = [j.strip() for j in lastname_data]
+        with open(lastnames_file, 'r') as f:
+            lastnamesdata = f.readlines()
+        self.lastnamesdata = [j.strip() for j in lastnamesdata]
 
     def generate(self, size=1):
         names = []
         for i in range(size):
-            name = random.choice(self.firstname_data) + ' ' + random.choice(self.lastname_data)
+            name = random.choice(self.firstnames_data) + ' ' + random.choice(self.lastnames_data)
             names.append(name)
         return names
