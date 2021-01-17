@@ -1,3 +1,5 @@
+import json
+import logging
 import uuid
 import random
 import os
@@ -5,12 +7,31 @@ from .core import Team, Congregation
 
 
 HERE = os.path.abspath(os.path.dirname(__file__))
+logger = logging.getLogger('gp')
 
 
 ###############################################################
 # Classes below are intended to be imported and used
 
-class LeagueGenerator(object):
+class LeagueBase(object):
+    default_filename = None
+    def write_file(self, league_map, working_dir, output_file):
+        # if working_dir specified, write league_map to output_file
+        if working_dir is not None:
+            # default output filename
+            if output_file is None:
+                # make sure calling a derived class that defines default_filename
+                if self.default_filename is None:
+                    raise NotImplementedError("Error: do not use LeagueBase class")
+                json_output_file = os.path.join(working_dir, self.default_filename)
+            # dump
+            with open(json_output_file, 'w') as f:
+                json.dump(league_map, f, indent=4)
+            return json_output_file
+        return None
+
+
+class LeagueGenerator(LeagueBase):
     """
     Generate a league (a collection of teams in the form of a team id: team json map).
     Team JSON contains:
@@ -19,8 +40,10 @@ class LeagueGenerator(object):
     - nickname
     - color
     """
+    default_filename = 'league.json'
+
     def __init__(
-        self, 
+        self,
         cities_file = None,
         nicknames_file = None,
         colors_file = None
@@ -36,17 +59,32 @@ class LeagueGenerator(object):
         # The team generator does all the hard work
         self.team_generator = TeamGenerator(cities_file, nicknames_file, colors_file)
 
-    def generate(self, size=2):
-        if size%2 != 0:
-            raise Exception(f"Error: leagues must have an even number of teams")
-        league = self.team_generator.generate(size = size)
-        return league
+    def generate(self, working_dir=None, output_file=None, size=4):
+        if working_dir is not None:
+            if not os.path.isdir(working_dir):
+                raise Exception(f"Error: provided working directory {working_dir} is not a directory")
+        if size%4 != 0:
+            raise Exception(f"Error: leagues must have a number of teams divisible by 4")
+
+        # rearrange data into a map
+        league_list = self.team_generator.generate(size = size)
+        league_map = {}
+        for team in league_list:
+            league_map[team['id']] = team
+
+        # write to json file, if working_dir is specified
+        json_file = self.write_file(league_map, working_dir, output_file)
+
+        # finally return the json to the user
+        return league_map, json_file
 
 
-class GatorLeagueGenerator(object):
+class GatorLeagueGenerator(LeagueBase):
     """
     Generate a gator league (a collection of congregations in the form of a congregation id: congregation json map).
     """
+    default_filename = 'gatorleague.json'
+
     def __init__(
         self,
         gatorplaces_file = None,
@@ -60,12 +98,25 @@ class GatorLeagueGenerator(object):
 
         # The congregation generator does all the hard work
         self.congregation_generator = CongregationGenerator(gatorplaces_file, gatornicknames_file)
-    
-    def generate(self, size=2):
+
+    def generate(self, working_dir=None, output_file=None, size=2):
+        if working_dir is not None:
+            if not os.path.isdir(working_dir):
+                raise Exception(f"Error: provided working directory {working_dir} is not a directory")
         if size%2 != 0:
             raise Exception(f"Error: gator leagues must have an even number of congregations")
-        gleague = self.congregation_generator.generate(size = size)
-        return gleague
+
+        # rearrange data into a map
+        gleague_list = self.congregation_generator.generate(size = size)
+        gleague_map = {}
+        for team in gleague_list:
+            gleague_map[team['id']] = team
+
+        # write to json file, if working_dir is specified
+        json_file = self.write_file(gleague_map, working_dir, output_file)
+
+        # finally return the json to the user
+        return gleague_map, json_file
 
 
 ### class RosterGenerator(object):
@@ -78,7 +129,7 @@ class GatorLeagueGenerator(object):
 ###         lastnames_file = None
 ###     ):
 ###         self.player_generator = PlayerGenerator(firstnames_file, lastnames_file)
-### 
+###
 ###     def generate(self, size=1):
 ###         roster = {}
 ###         for i in range(size):
@@ -95,7 +146,7 @@ class BaseGenerator(object):
     Base class to load lines from plain text file into list
     """
     def __init__(
-        self, 
+        self,
         data_file
     ):
         # Verify file exists
@@ -119,9 +170,9 @@ class TeamGenerator(object):
     Generate info about teams
     """
     def __init__(
-        self, 
-        cities_file, 
-        nicknames_file, 
+        self,
+        cities_file,
+        nicknames_file,
         colors_file
     ):
         self.city_generator     = BaseGenerator(cities_file)
@@ -172,12 +223,12 @@ class CongregationGenerator(object):
 ###     - con (consistency)
 ###     """
 ###     def __init__(
-###         self, 
+###         self,
 ###         firstnames_file,
 ###         lastnames_file
 ###     ):
 ###         self.name_generator = NameGenerator(firstnames_file, lastnames_file)
-### 
+###
 ###     def generate(self, size=1):
 ###         players = []
 ###         for i in range(size):
@@ -190,15 +241,15 @@ class CongregationGenerator(object):
 ###             player['con'] = random.randint(1,5)
 ###             players.append(player)
 ###         return players
-### 
-### 
+###
+###
 ### class NameGenerator(object):
 ###     """
 ###     Generate first + last names.
 ###     """
 ###     def __init__(
-###         self, 
-###         firstnames_file, 
+###         self,
+###         firstnames_file,
 ###         lastnames_file
 ###     ):
 ###         if firstnames_file is None:
@@ -217,7 +268,7 @@ class CongregationGenerator(object):
 ###         with open(lastnames_file, 'r') as f:
 ###             lastnamesdata = f.readlines()
 ###         self.lastnamesdata = [j.strip() for j in lastnamesdata]
-### 
+###
 ###     def generate(self, size=1):
 ###         names = []
 ###         for i in range(size):
