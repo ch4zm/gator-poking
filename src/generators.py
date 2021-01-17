@@ -3,7 +3,7 @@ import logging
 import uuid
 import random
 import os
-from .core import Team, Congregation
+from .core import Team, Congregation, NameGenerator
 
 
 HERE = os.path.abspath(os.path.dirname(__file__))
@@ -241,37 +241,5 @@ class CongregationGenerator(object):
 ###             player['con'] = random.randint(1,5)
 ###             players.append(player)
 ###         return players
-###
-###
-### class NameGenerator(object):
-###     """
-###     Generate first + last names.
-###     """
-###     def __init__(
-###         self,
-###         firstnames_file,
-###         lastnames_file
-###     ):
-###         if firstnames_file is None:
-###             firstnames_file = os.path.join(HERE, 'data', 'firstnames.txt')
-###         if lastnames_file is None:
-###             lastnames_file = os.path.join(HERE, 'data', 'lastnames.txt')
-###         # verify file exists
-###         for data_file in [firstnames_file, lastnames_file]:
-###             if not os.path.exists(data_file):
-###                 raise Exception(f"Error: Could not find data file {data_file}")
-###         # load first names
-###         with open(firstnames_file, 'r') as f:
-###             firstnamesdata = f.readlines()
-###         self.firstnamesdata = [j.strip() for j in firstnamesdata]
-###         # load last names
-###         with open(lastnames_file, 'r') as f:
-###             lastnamesdata = f.readlines()
-###         self.lastnamesdata = [j.strip() for j in lastnamesdata]
-###
-###     def generate(self, size=1):
-###         names = []
-###         for i in range(size):
-###             name = random.choice(self.firstnamesdata) + ' ' + random.choice(self.lastnamesdata)
-###             names.append(name)
-###         return names
+
+
