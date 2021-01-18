@@ -12,3 +12,11 @@ league, league_filename = lg.generate(working_dir=HERE)
 print("-"*40)
 print(f"Wrote league to {league_filename}")
 print("-"*40)
+
+print()
+
+glg = GatorLeagueGenerator()
+gleague, gleague_filename = glg.generate(working_dir=HERE)
+print("-"*40)
+print(f"Wrote league to {gleague_filename}")
+print("-"*40)
