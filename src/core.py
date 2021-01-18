@@ -29,19 +29,51 @@ class DefaultConfig(Config):
         self['PLAYS_PER_OVER']   = 6
 
 
-class League(object):
+##################################
+# Leagues/GatorLeagues
+
+class LeagueBase(object):
+    req_keys = []
     def __init__(self, league_json_file):
+        # Make sure data file exists
         if not os.path.exists(league_json_file):
             raise Exception(f"Error: league file {league_json_file} does not exist")
+
+        # Load the data file
         with open(league_json_file, 'r') as f:
             self.data = json.load(f)
 
+        # Validate the loaded data
+        team_req_keys = self.req_keys
+        for teamid, teamdict in self.data.items():
+            for rk in team_req_keys:
+                if rk not in teamdict:
+                    raise Exception(f"Error: could not create league from json file {league_json_file}, team missing key {rk}")
+
+
+class League(LeagueBase):
+    req_keys = ['id', 'city', 'nickname', 'color', 'name']
+
     def get_teams(self):
         teams = []
-        for teamid, teamjson in self.data:
-            teams.append(Teams.from_json(teamjson))
+        for teamid, teamjson in self.data.items():
+            teams.append(Team.from_json(teamjson))
         return teams
 
+
+class GatorLeague(LeagueBase):
+    req_keys = ['id', 'place', 'nickname', 'name']
+
+    def get_congregations(self):
+        congs = []
+        for congid, congjson in self.data.items():
+            congs.append(Congregation.from_json(congjson))
+        return congs
+
+
+
+##################################
+# Teams/Congregations
 
 class Team(object):
     """
@@ -50,20 +82,49 @@ class Team(object):
     Loads the roster to return players in order, retaining state.
     Useful for Game simulator.
     """
-    def __init__(self, teamid, city, nickname, color):
-        self.id = teamid
-        self.city = city
-        self.nick = nickname
-        self.color = color
-        self.name = city + " " + nickname
-        self.roster = None
+    req_keys = ['city', 'nickname', 'color']
+    def __init__(self, **kwargs):
+        req_keys = self.req_keys
+        for rk in req_keys:
+            if rk not in kwargs:
+                raise Exception(f"Error: missing required key {rk} in Team constructor")
+            setattr(self, rk, kwargs[rk])
+        if 'id' not in kwargs:
+            playerid = str(uuid.uuid4())
+        else:
+            playerid = kwargs['id']
+        setattr(self, 'id', playerid)
+        self.name = self.city + " " + self.nickname
 
-    def init_roster(self, working_dir):
+    def __repr__(self):
+        return self.name
+
+    def to_json(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "nickname": self.nickname,
+            "city": self.city,
+            "color": self.color
+        }
+
+    @classmethod
+    def from_json(cls, data_dict):
+        req_keys = ['id', 'city', 'nickname', 'color']
+        for rk in req_keys:
+            if rk not in data_dict:
+                raise Exception(f"Error: could not create team from dictionary data, missing key {rk}")
+        return cls(**data_dict)
+
+    def set_start_roster(self, working_dir, roster=None):
         if not os.path.isdir(working_dir):
             raise Exception(f"Error: specified working directory {working_dir} is not a directory")
         self.working_dir = working_dir
-        # Create a new roster in the working dir
-        self.roster = None
+
+        if roster is None:
+            self.roster = Roster()
+        else:
+            self.roster = roster
 
     def inning_start(self):
         self.index = 0
@@ -83,126 +144,85 @@ class Team(object):
         else:
             return None
 
-    def to_json(self):
-        return {
-            "id": self.id,
-            "name": self.name,
-            "nickname": self.nick,
-            "city": self.city,
-            "color": self.color
-        }
-
-    @classmethod
-    def from_json(cls, data_dict):
-        req_keys = ['id', 'city', 'nickname', 'color', 'name']
-        for rk in req_keys:
-            if rk not in data_dict:
-                raise Exception(f"Error: could not create team from dictionary data, missing key {rk}")
-        return cls(data_dict['id'], data_dict['city'], data_dict['nickname'], data_dict['color'])
-
-    @classmethod
-    def from_json_file(cls, data_file):
-        if not os.path.exists(data_file):
-            raise Exception(f"Error: specified data file {data_file} does not exist")
-        with open(data_file, 'r') as f:
-            data_dict = json.load(f)
-        req_keys = ['id', 'city', 'nickname', 'color', 'name']
-        for rk in req_keys:
-            if rk not in data_dict:
-                raise Exception(f"Error: could not create team from json file {data_file}, missing key {rk}")
-        return cls(data_dict['id'], data_dict['city'], data_dict['nickname'], data_dict['color'])
-
-
-class Player(object):
-    def __init__(self, **kwargs):
-        req_keys = ['id', 'name', 'agg', 'rea', 'rxn', 'con']
-        for rk in req_keys:
-            if rk not in kwargs:
-                raise Exception(f"Error: missing required key {rk} from player constructor")
-        self.id = kwargs['id']
-        self.agg = kwargs['agg']
-        self.rea = kwargs['rea']
-        self.rxn = kwargs['rxn']
-        self.con = kwargs['con']
-
-
-class RandomPlayer(Player):
-    def __init__(self):
-        ng = NameGenerator(firstnames_file, lastnames_file)
-        name = ng.generate()
-        # name = "Joe Blog"
-        super().__init__(
-            id = str(uuid.uuid4()),
-            name = name,
-            agg = random.randint(1,5),
-            rea = random.randint(1,5),
-            rxn = random.randint(1,5),
-            con = random.randint(1,5)
-        )
-
 
 class Congregation(object):
     """
     Define a congregation of gators.
     This is the "team" of gators that occupy a field.
     """
-    def __init__(self, gatorid, place, nickname):
-        self.id = gatorid
-        self.place = place
-        self.nick = nickname
-        self.name = place + " " + nickname
+    req_keys = ['place', 'nickname']
+    def __init__(self, **kwargs):
+        req_keys = self.req_keys
+        for rk in req_keys:
+            if rk not in kwargs:
+                raise Exception(f"Error: missing required key {rk} from Congregation constructor")
+            setattr(self, rk, kwargs[rk])
+        if 'id' not in kwargs:
+            playerid = str(uuid.uuid4())
+        else:
+            playerid = kwargs['id']
+        setattr(self, 'id', playerid)
+        self.name = self.place + " " + self.nickname
 
-    def get_next_gator(self):
-        return Gator()
+    def __repr__(self):
+        return self.name
 
     def to_json(self):
         return {
             "id": self.id,
             "name": self.name,
             "place": self.place,
-            "nickname": self.nick
+            "nickname": self.nickname
         }
+
+    @classmethod
+    def from_json(cls, data_dict):
+        req_keys = ['id', 'place', 'nickname', 'name']
+        for rk in req_keys:
+            if rk not in data_dict:
+                raise Exception(f"Error: could not create team from dictionary data, missing key {rk}")
+        return cls(**data_dict)
+
+    def get_next_gator(self):
+        return Gator(
+            name = self.name,
+            agg = self.agg,
+            rea = self.rea,
+            rxn = self.rxn,
+            con = self.con
+        )
+
+    def set_attributes(self):
+        attr_keys = ['agg', 'rea', 'rxn', 'con']
+        for k in attr_keys:
+            setattr(self, k, random.randint(1,5))
+
+
+##################################
+# Players/Gators
+
+class PlayerBase(object):
+    req_keys = ['name', 'agg', 'rea', 'rxn', 'con']
+    def __init__(self, **kwargs):
+        req_keys = self.req_keys
+        for rk in req_keys:
+            if rk not in kwargs:
+                raise Exception(f"Error: missing required key {rk} from {type(self).__name__} constructor")
+            setattr(self, rk, kwargs[rk])
+        if 'id' not in kwargs:
+            playerid = str(uuid.uuid4())
+        else:
+            playerid = kwargs['id']
+        setattr(self, 'id', playerid)
+
+    def __repr__(self):
+        s = f"{self.name} (agg {self.agg}/rea {self.rea}/rxn {self.rxn}/con {self.con})"
+        return s
+
+
+class Player(PlayerBase):
+    pass
 
 
 class Gator(object):
-    def __init__(self):
-        self.id = str(uuid.uuid4())
-        self.attr = {}
-        self.attr['agg'] = random.randint(1,5)
-        self.attr['rea'] = random.randint(1,5)
-        self.attr['rxn'] = random.randint(1,5)
-        self.attr['con'] = random.randint(1,5)
-
-
-class NameGenerator(object):
-    """
-    Generate first + last names.
-    """
-    def __init__(
-        self,
-        firstnames_file,
-        lastnames_file
-    ):
-        if firstnames_file is None:
-            firstnames_file = os.path.join(HERE, 'data', 'firstnames.txt')
-        if lastnames_file is None:
-            lastnames_file = os.path.join(HERE, 'data', 'lastnames.txt')
-        # verify file exists
-        for data_file in [firstnames_file, lastnames_file]:
-            if not os.path.exists(data_file):
-                raise Exception(f"Error: Could not find data file {data_file}")
-        # load first names
-        with open(firstnames_file, 'r') as f:
-            firstnamesdata = f.readlines()
-        self.firstnamesdata = [j.strip() for j in firstnamesdata]
-        # load last names
-        with open(lastnames_file, 'r') as f:
-            lastnamesdata = f.readlines()
-        self.lastnamesdata = [j.strip() for j in lastnamesdata]
-
-    def generate(self, size=1):
-        names = []
-        for i in range(size):
-            name = random.choice(self.firstnamesdata) + ' ' + random.choice(self.lastnamesdata)
-            names.append(name)
-        return names
+    pass

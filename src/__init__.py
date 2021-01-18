@@ -1,4 +1,4 @@
-from .gamesimulator import GameSimulator
+from .game import Game
 from .generators import (
     LeagueGenerator,
     GatorLeagueGenerator

@@ -3,7 +3,7 @@ import logging
 import uuid
 import random
 import os
-from .core import Team, Congregation, NameGenerator
+from .core import Team, Congregation, Player, Gator
 
 
 HERE = os.path.abspath(os.path.dirname(__file__))
@@ -11,10 +11,11 @@ logger = logging.getLogger('gp')
 
 
 ###############################################################
-# Classes below are intended to be imported and used
+# Base classes
 
-class LeagueBase(object):
+class LeagueGeneratorBase(object):
     default_filename = None
+
     def write_file(self, league_map, working_dir, output_file):
         # if working_dir specified, write league_map to output_file
         if working_dir is not None:
@@ -31,7 +32,34 @@ class LeagueBase(object):
         return None
 
 
-class LeagueGenerator(LeagueBase):
+class BaseGenerator(object):
+    """
+    Base class to load lines from plain text file into list
+    """
+    def __init__(
+        self,
+        data_file
+    ):
+        # Verify file exists
+        if not os.path.exists(data_file):
+            raise Exception(f"Error: specified data file {data_file} does not exist!")
+        # Load data
+        with open(data_file, 'r') as f:
+            data = f.readlines()
+        self.data = [j.strip() for j in data]
+
+    def generate(self, size=1):
+        if size > len(self.data):
+            raise Exception(f"Error: requested size {size} was larger than size of data {len(self.data)}")
+        data = self.data[:]
+        random.shuffle(data)
+        return data[:size]
+
+
+#####################################
+# Public classes
+
+class LeagueGenerator(LeagueGeneratorBase):
     """
     Generate a league (a collection of teams in the form of a team id: team json map).
     Team JSON contains:
@@ -79,7 +107,7 @@ class LeagueGenerator(LeagueBase):
         return league_map, json_file
 
 
-class GatorLeagueGenerator(LeagueBase):
+class GatorLeagueGenerator(LeagueGeneratorBase):
     """
     Generate a gator league (a collection of congregations in the form of a congregation id: congregation json map).
     """
@@ -95,9 +123,7 @@ class GatorLeagueGenerator(LeagueBase):
             gatorplaces_file = os.path.join(HERE, 'data', 'gatorplaces.txt')
         if gatornicknames_file is None:
             gatornicknames_file = os.path.join(HERE, 'data', 'gatornicknames.txt')
-
-        # The congregation generator does all the hard work
-        self.congregation_generator = CongregationGenerator(gatorplaces_file, gatornicknames_file)
+        self.cong_gen = CongregationGenerator(gatorplaces_file, gatornicknames_file)
 
     def generate(self, working_dir=None, output_file=None, size=2):
         if working_dir is not None:
@@ -107,10 +133,10 @@ class GatorLeagueGenerator(LeagueBase):
             raise Exception(f"Error: gator leagues must have an even number of congregations")
 
         # rearrange data into a map
-        gleague_list = self.congregation_generator.generate(size = size)
+        gleague_list = self.cong_gen.generate(size = size)
         gleague_map = {}
-        for team in gleague_list:
-            gleague_map[team['id']] = team
+        for cong in gleague_list:
+            gleague_map[cong['id']] = cong
 
         # write to json file, if working_dir is specified
         json_file = self.write_file(gleague_map, working_dir, output_file)
@@ -139,31 +165,10 @@ class GatorLeagueGenerator(LeagueBase):
 
 
 ###############################################################
-# Classes below are mostly for internal use
+# Generator classes for internal use
 
-class BaseGenerator(object):
-    """
-    Base class to load lines from plain text file into list
-    """
-    def __init__(
-        self,
-        data_file
-    ):
-        # Verify file exists
-        if not os.path.exists(data_file):
-            raise Exception(f"Error: specified data file {data_file} does not exist!")
-        # Load data
-        with open(data_file, 'r') as f:
-            data = f.readlines()
-        self.data = [j.strip() for j in data]
-
-    def generate(self, size=1):
-        if size > len(self.data):
-            raise Exception(f"Error: requested size {size} was larger than size of data {len(self.data)}")
-        data = self.data[:]
-        random.shuffle(data)
-        return data[:size]
-
+# -------------------------
+# Teams/Congregations
 
 class TeamGenerator(object):
     """
@@ -185,8 +190,12 @@ class TeamGenerator(object):
         colors = self.color_generator.generate(size = size)
         teams = []
         for (city, nickname, color) in zip(cities, nicknames, colors):
-            teamid = str(uuid.uuid4())
-            t = Team(teamid, city, nickname, color)
+            t = Team(
+                id = str(uuid.uuid4()),
+                city = city,
+                nickname = nickname,
+                color = color
+            )
             teams.append(t.to_json())
         return teams
 
@@ -205,10 +214,118 @@ class CongregationGenerator(object):
         nicks = self.nick_generator.generate(size = size)
         congregations = []
         for (p, n) in zip(places, nicks):
-            congid = str(uuid.uuid4())
-            c = Congregation(congid, p, n)
+            c = Congregation(
+                id = str(uuid.uuid4()),
+                place = p,
+                nickname = n
+            )
             congregations.append(c.to_json())
         return congregations
+
+
+# -------------------------
+# Names
+
+class GatorNameGenerator(object):
+    """
+    Generate names of gator types (not individual gators)
+    """
+    def __init__(
+        self,
+        gatorplaces_file = None,
+        gatornicknames_file = None
+    ):
+        # Set default values for filenames
+        if gatorplaces_file is None:
+            gatorplaces_file = os.path.join(HERE, 'data', 'gatorplaces.txt')
+        if gatornicknames_file is None:
+            gatornicknames_file = os.path.join(HERE, 'data', 'gatornicknames.txt')
+
+        # load place names
+        with open(gatorplaces_file, 'r') as f:
+            gatorplaces = f.readlines()
+        self.gatorplaces = [j.strip() for j in gatorplaces]
+        # load names
+        with open(gatornicknames_file, 'r') as f:
+            gatornicknames = f.readlines()
+        self.gatornicknames = [j.strip() for j in gatornicknames]
+
+    def generate(self, size=1):
+        names = []
+        for i in range(size):
+            name = random.choice(self.gatorplaces) + ' ' + random.choice(self.gatornicknames)
+            names.append(name)
+        return names
+
+
+class NameGenerator(object):
+    """
+    Generate first + last names.
+    """
+    def __init__(
+        self,
+        firstnames_file,
+        lastnames_file
+    ):
+        if firstnames_file is None:
+            firstnames_file = os.path.join(HERE, 'data', 'firstnames.txt')
+        if lastnames_file is None:
+            lastnames_file = os.path.join(HERE, 'data', 'lastnames.txt')
+        # verify file exists
+        for data_file in [firstnames_file, lastnames_file]:
+            if not os.path.exists(data_file):
+                raise Exception(f"Error: Could not find data file {data_file}")
+        # load first names
+        with open(firstnames_file, 'r') as f:
+            firstnamesdata = f.readlines()
+        self.firstnamesdata = [j.strip() for j in firstnamesdata]
+        # load last names
+        with open(lastnames_file, 'r') as f:
+            lastnamesdata = f.readlines()
+        self.lastnamesdata = [j.strip() for j in lastnamesdata]
+
+    def generate(self, size=1):
+        names = []
+        for i in range(size):
+            name = random.choice(self.firstnamesdata) + ' ' + random.choice(self.lastnamesdata)
+            names.append(name)
+        return names
+
+
+# -------------------------
+# Random players/gators
+
+class RandomPlayer(object):
+    def __new__(cls):
+        ng = NameGenerator(firstnames_file, lastnames_file)
+        name = ng.generate()
+        p = Player(
+            id = str(uuid.uuid4()),
+            name = name,
+            agg = random.randint(1,5),
+            rea = random.randint(1,5),
+            rxn = random.randint(1,5),
+            con = random.randint(1,5)
+        )
+        return p
+
+
+class RandomGator(Gator):
+    """
+    Generate a random ggator
+    """
+    def __new__(cls):
+        gng = GatorNameGenerator(gatorplaces_file, gatornicknames_file)
+        name = gng.generate()
+        g = Gator(
+            id = str(uuid.uuid4()),
+            name = name,
+            agg = random.randint(1,5),
+            rea = random.randint(1,5),
+            rxn = random.randint(1,5),
+            con = random.randint(1,5)
+        )
+        return g
 
 
 ### class PlayerGenerator(object):

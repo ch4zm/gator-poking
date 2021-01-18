@@ -1,3 +1,4 @@
+import uuid
 import logging
 import random
 
@@ -16,7 +17,21 @@ class Game(object):
     This manages each inning, and hands off details
     of each over to the over generator.
     """
-    def __init__(self, config, redteam, blueteam, congregation):
+    def __init__(self, **kwargs):
+        req_keys = ['team1', 'team2', 'congregation']
+        for rk in req_keys:
+            if rk not in kwargs:
+                raise Exception(f"Error: missing required key {rk} from Game constructor")
+            setattr(self, rk, kwargs[rk])
+        gameid = str(uuid.uuid4())
+        if 'config' in kwargs:
+            config = kwargs['config']
+        else:
+            config = DefaultConfig()
+        self.config = config
+
+
+    def __init__(self, redteam, blueteam, congregation, config = None):
 
         logger.warning("\n\n")
         logger.warning("---------------------- STARTING GAME -------------------------")
@@ -25,6 +40,8 @@ class Game(object):
         logger.debug("DEBUG level: on")
         logger.warning("\n\n")
 
+        if config is None:
+            config = DefaultConfig()
         self.config = config
 
         # Start with a coin flip to determine who goes first
@@ -64,25 +81,3 @@ class Game(object):
         state = self.state
         logger.info(f"{state.team1.name:>35}: {state.state1.wickets}{'*' if state.state1.eaten else ''} / {state.state1.runs} - {len(t1_r)}.{len(t1_r[-1])}")
         logger.info(f"{state.team2.name:>35}: {state.state2.wickets}{'*' if state.state2.eaten else ''} / {state.state2.runs} - {len(t2_r)}.{len(t2_r[-1])}")
-
-
-class GameSimulator(object):
-
-    def simulate(self, config = None):
-
-        logger.warning("\n\n")
-        logger.warning("---------------------- STARTING SIMULATOR -------------------------")
-        logger.warning("logger warning level: on")
-        logger.info("logger info level: on")
-        logger.debug("logger debug level: on")
-        logger.warning("\n\n")
-
-        if config is None:
-            config = DefaultConfig()
-
-        t1 = Team("St. Petersburg Paradoxes", size=config['PLAYERS_PER_SIDE'])
-        t2 = Team("Tallahassee Rasslers", size=config['PLAYERS_PER_SIDE'])
-        congregation = Congregation("Everglades Glories")
-
-        self.game = Game(config, t1, t2, congregation)
-        self.game.simulate()
