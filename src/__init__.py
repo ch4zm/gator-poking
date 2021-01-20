@@ -1,4 +1,8 @@
 from .game import Game
+from .core import (
+    League,
+    GatorLeague
+)
 from .generators import (
     LeagueGenerator,
     GatorLeagueGenerator

@@ -17,8 +17,9 @@ class Game(object):
     This manages each inning, and hands off details
     of each over to the over generator.
     """
+    req_keys = ['team1', 'team2', 'congregation']
     def __init__(self, **kwargs):
-        req_keys = ['team1', 'team2', 'congregation']
+        req_keys = self.req_keys
         for rk in req_keys:
             if rk not in kwargs:
                 raise Exception(f"Error: missing required key {rk} from Game constructor")
@@ -30,27 +31,12 @@ class Game(object):
             config = DefaultConfig()
         self.config = config
 
-
-    def __init__(self, redteam, blueteam, congregation, config = None):
-
         logger.warning("\n\n")
-        logger.warning("---------------------- STARTING GAME -------------------------")
+        logger.warning("---------------------- INITIALIZING GAME -------------------------")
         logger.warning("WARNING level: on")
         logger.info("INFO level: on")
         logger.debug("DEBUG level: on")
         logger.warning("\n\n")
-
-        if config is None:
-            config = DefaultConfig()
-        self.config = config
-
-        # Start with a coin flip to determine who goes first
-        if random.random() < 0.50:
-            team1 = redteam
-            team2 = blueteam
-        else:
-            team1 = blueteam
-            team2 = redteam
 
         state1 = TeamState(team1)
         state2 = TeamState(team1)

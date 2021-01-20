@@ -78,11 +78,11 @@ class GatorLeague(LeagueBase):
 class Team(object):
     """
     Define a class for teams.
-    Holds information about the team, plus a pointer to a roster.
-    Loads the roster to return players in order, retaining state.
+    Holds information about the team.
     Useful for Game simulator.
     """
     req_keys = ['city', 'nickname', 'color']
+
     def __init__(self, **kwargs):
         req_keys = self.req_keys
         for rk in req_keys:
@@ -116,33 +116,33 @@ class Team(object):
                 raise Exception(f"Error: could not create team from dictionary data, missing key {rk}")
         return cls(**data_dict)
 
-    def set_start_roster(self, working_dir, roster=None):
-        if not os.path.isdir(working_dir):
-            raise Exception(f"Error: specified working directory {working_dir} is not a directory")
-        self.working_dir = working_dir
+    ### def set_start_roster(self, working_dir, roster=None):
+    ###     if not os.path.isdir(working_dir):
+    ###         raise Exception(f"Error: specified working directory {working_dir} is not a directory")
+    ###     self.working_dir = working_dir
 
-        if roster is None:
-            self.roster = Roster()
-        else:
-            self.roster = roster
+    ###     if roster is None:
+    ###         self.roster = Roster()
+    ###     else:
+    ###         self.roster = roster
 
-    def inning_start(self):
-        self.index = 0
+    ### def inning_start(self):
+    ###     self.index = 0
 
-    def has_next_player(self):
-        """
-        Check if there is a next player to return
-        """
-        return self.index < len(self.roster)
+    ### def has_next_player(self):
+    ###     """
+    ###     Check if there is a next player to return
+    ###     """
+    ###     return self.index < len(self.roster)
 
-    def get_next_player(self):
-        """
-        Get the next player
-        """
-        if self.has_next_player():
-            return self.roster[self.index]
-        else:
-            return None
+    ### def get_next_player(self):
+    ###     """
+    ###     Get the next player
+    ###     """
+    ###     if self.has_next_player():
+    ###         return self.roster[self.index]
+    ###     else:
+    ###         return None
 
 
 class Congregation(object):

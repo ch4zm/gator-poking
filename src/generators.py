@@ -154,8 +154,12 @@ class GatorLeagueGenerator(LeagueGeneratorBase):
 ###         firstnames_file = None,
 ###         lastnames_file = None
 ###     ):
+###         if firstnames_file is None:
+###             firstnames_file = os.path.join(HERE, 'firstnames.txt')
+###         if lastnames_file is None:
+###             lastnames_file = os.path.join(HERE, 'lastnames.txt')
 ###         self.player_generator = PlayerGenerator(firstnames_file, lastnames_file)
-###
+### 
 ###     def generate(self, size=1):
 ###         roster = {}
 ###         for i in range(size):
