@@ -38,6 +38,10 @@ class Game(object):
         logger.debug("DEBUG level: on")
         logger.warning("\n\n")
 
+        team1 = kwargs['team1']
+        team2 = kwargs['team2']
+        congregation = kwargs['congregation']
+
         state1 = TeamState(team1)
         state2 = TeamState(team1)
 
