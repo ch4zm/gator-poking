@@ -1,0 +1,30 @@
+{
+    "b57b3351-867b-45c0-bcfd-194fb1a6353a": {
+        "id": "b57b3351-867b-45c0-bcfd-194fb1a6353a",
+        "name": "Las Cruces Sneakers",
+        "nickname": "Sneakers",
+        "city": "Las Cruces",
+        "color": "#c0ffc0"
+    },
+    "ef00195c-a410-4cd0-a007-3ff19d500290": {
+        "id": "ef00195c-a410-4cd0-a007-3ff19d500290",
+        "name": "Elko Irish",
+        "nickname": "Irish",
+        "city": "Elko",
+        "color": "#bb0000"
+    },
+    "d10f83ac-f6e9-4a00-9259-50b5f0ff0586": {
+        "id": "d10f83ac-f6e9-4a00-9259-50b5f0ff0586",
+        "name": "Cleveland Legal Briefs",
+        "nickname": "Legal Briefs",
+        "city": "Cleveland",
+        "color": "#c0c0ff"
+    },
+    "c24dc409-56a5-4187-8445-b0590d202099": {
+        "id": "c24dc409-56a5-4187-8445-b0590d202099",
+        "name": "Coolidge Bombshells",
+        "nickname": "Bombshells",
+        "city": "Coolidge",
+        "color": "#ffc0c0"
+    }
+}

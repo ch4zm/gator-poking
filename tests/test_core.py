@@ -2,8 +2,13 @@ import os
 import unittest
 from gator_poking.core import (
     Config,
-    DefaultConfig
+    DefaultConfig,
+    League,
+    GatorLeague,
+    Team,
+    Congregation
 )
+
 
 HERE = os.path.split(os.path.abspath(__file__))[0]
 
@@ -23,3 +28,19 @@ class CoreTest(unittest.TestCase):
 
         d = DefaultConfig()
         self.assertDictEqual(d, g)
+
+class LeagueTest(unittest.TestCase):
+    def test_league(self):
+        fixture_league = os.path.join(HERE, 'fixtures', 'fixture_league.json')
+        lea = League(fixture_league)
+        teams = lea.get_teams()
+        for team in teams:
+            self.assertEqual(type(team), Team)
+
+class GatorLeagueTest(unittest.TestCase):
+    def test_gator_league(self):
+        fixture_league = os.path.join(HERE, 'fixtures', 'fixture_gatorleague.json')
+        lea = GatorLeague(fixture_league)
+        congs = lea.get_congregations()
+        for cong in congs:
+            self.assertEqual(type(cong), Congregation)
