@@ -1,7 +1,6 @@
 import os
 import json
-from gator_poking import Game
-from gator_poking.core import League, GatorLeague
+from gator_poking import Game, League, GatorLeague
 
 
 HERE = os.path.abspath(os.path.dirname(__file__))
