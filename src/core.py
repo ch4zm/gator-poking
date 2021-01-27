@@ -2,6 +2,7 @@ import os
 import json
 import uuid
 import random
+from .errors import GatorPokingError as GPE
 
 
 class Config(dict):
@@ -16,7 +17,7 @@ class Config(dict):
         ]
         for rk in req_keys:
             if rk not in config.keys():
-                raise Exception(f"Missing required config key: {rk}")
+                raise GPE(f"Missing required config key: {rk}")
         for k,v in config.items():
             self[k] = v
 
@@ -37,7 +38,7 @@ class LeagueBase(object):
     def __init__(self, league_json_file):
         # Make sure data file exists
         if not os.path.exists(league_json_file):
-            raise Exception(f"Error: league file {league_json_file} does not exist")
+            raise GPE(f"Error: league file {league_json_file} does not exist")
 
         # Load the data file
         with open(league_json_file, 'r') as f:
@@ -48,7 +49,7 @@ class LeagueBase(object):
         for teamid, teamdict in self.data.items():
             for rk in team_req_keys:
                 if rk not in teamdict:
-                    raise Exception(f"Error: could not create league from json file {league_json_file}, team missing key {rk}")
+                    raise GPE(f"Error: could not create league from json file {league_json_file}, team missing key {rk}")
 
 
 class League(LeagueBase):
@@ -87,7 +88,7 @@ class Team(object):
         req_keys = self.req_keys
         for rk in req_keys:
             if rk not in kwargs:
-                raise Exception(f"Error: missing required key {rk} in Team constructor")
+                raise GPE(f"Error: missing required key {rk} in Team constructor")
             setattr(self, rk, kwargs[rk])
         if 'id' not in kwargs:
             playerid = str(uuid.uuid4())
@@ -113,12 +114,12 @@ class Team(object):
         req_keys = ['id', 'city', 'nickname', 'color']
         for rk in req_keys:
             if rk not in data_dict:
-                raise Exception(f"Error: could not create team from dictionary data, missing key {rk}")
+                raise GPE(f"Error: could not create team from dictionary data, missing key {rk}")
         return cls(**data_dict)
 
     ### def set_start_roster(self, working_dir, roster=None):
     ###     if not os.path.isdir(working_dir):
-    ###         raise Exception(f"Error: specified working directory {working_dir} is not a directory")
+    ###         raise GPE(f"Error: specified working directory {working_dir} is not a directory")
     ###     self.working_dir = working_dir
 
     ###     if roster is None:
@@ -155,7 +156,7 @@ class Congregation(object):
         req_keys = self.req_keys
         for rk in req_keys:
             if rk not in kwargs:
-                raise Exception(f"Error: missing required key {rk} from Congregation constructor")
+                raise GPE(f"Error: missing required key {rk} from Congregation constructor")
             setattr(self, rk, kwargs[rk])
         if 'id' not in kwargs:
             playerid = str(uuid.uuid4())
@@ -180,7 +181,7 @@ class Congregation(object):
         req_keys = ['id', 'place', 'nickname', 'name']
         for rk in req_keys:
             if rk not in data_dict:
-                raise Exception(f"Error: could not create team from dictionary data, missing key {rk}")
+                raise GPE(f"Error: could not create team from dictionary data, missing key {rk}")
         return cls(**data_dict)
 
     def get_next_gator(self):
@@ -207,7 +208,7 @@ class PlayerBase(object):
         req_keys = self.req_keys
         for rk in req_keys:
             if rk not in kwargs:
-                raise Exception(f"Error: missing required key {rk} from {type(self).__name__} constructor")
+                raise GPE(f"Error: missing required key {rk} from {type(self).__name__} constructor")
             setattr(self, rk, kwargs[rk])
         if 'id' not in kwargs:
             playerid = str(uuid.uuid4())
