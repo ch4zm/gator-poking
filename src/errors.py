@@ -1,0 +1,2 @@
+class GatorPokingError(Exception):
+    pass
