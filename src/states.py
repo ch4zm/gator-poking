@@ -1,3 +1,6 @@
+from .core import Config
+
+
 class GameState(object):
     """
     Simple class to store game state.
@@ -8,7 +11,7 @@ class GameState(object):
     - gator congregation
     """
     def __init__(self, config, team1, team2, state1, state2, congregation):
-        self.config = config
+        self.config = Config(config)
         self.team1 = team1
         self.team2 = team2
         self.state1 = state1
