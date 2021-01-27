@@ -1,4 +1,5 @@
 from .game import Game
+from .errors import GatorPokingError
 from .core import (
     League,
     GatorLeague
